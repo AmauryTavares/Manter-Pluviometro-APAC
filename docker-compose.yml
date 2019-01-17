@@ -1,0 +1,39 @@
+version: '2.1'
+
+services:
+  testsql:
+    #image: mysql
+    image: mysql:5.7
+    #ports:
+    #  - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=teste
+      - MYSQL_DATABASE=dbPluviometro
+    restart: always
+    volumes:
+      - /data/mysql
+    networks:
+      - mysql_net
+    healthcheck:
+            test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+            timeout: 20s
+            retries: 10
+  
+  myapp:
+    depends_on:
+      testsql:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 9000:9000
+    links:
+      - testsql
+    volumes:
+      - /data/pluviometro
+    networks:
+      - mysql_net
+networks:
+  mysql_net:
+    driver: bridge
